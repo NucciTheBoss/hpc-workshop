@@ -1,0 +1,12 @@
+site_name: HPC Workshop - Ubuntu Summit 2022
+nav:
+  - 'Introduction': 'index.md'
+  - 'Groundwork': 'groundwork.md'
+  - 'Setting up our researcher': 'ldap.md'
+  - 'Everybody gets some data': 'nfs.md'
+  - 'Bureaucracy and nodes': 'slurm.md'
+  - 'Where is the software?': 'lmod.md'
+  - 'Getting fancy with containers': 'containers.md'
+  - 'Better software management with Spack': 'spack.md'
+  - 'Where to go from here?': 'future.md'
+theme: readthedocs

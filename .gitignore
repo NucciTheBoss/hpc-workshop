@@ -1,0 +1,5 @@
+# Rust-specific ignores
+/target
+
+# mkdocs documentation
+/site
