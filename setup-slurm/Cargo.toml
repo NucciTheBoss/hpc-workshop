@@ -1,0 +1,5 @@
+[package]
+name = "setup-slurm"
+version = "0.1.0"
+authors = ["Jason C. Nucciarone <nucci.programming@gmail.com>"]
+edition = "2021"
