@@ -1,8 +1,0 @@
-[workspace]
-
-members = [
-    "build-base", 
-    "setup-ldap", 
-    "setup-nfs", 
-    "setup-slurm",
-]
