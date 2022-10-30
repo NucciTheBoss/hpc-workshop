@@ -6,10 +6,35 @@
 
 from __future__ import annotations
 
-import argparse
+import sys
+
+from craft_cli import (
+    ArgumentParsingError,
+    CommandGroup,
+    Dispatcher,
+    EmitterMode,
+    ProvideHelpException,
+    emit,
+)
+
+from hpcworkshop.cmd.init import InitCommand
 
 
 def main() -> None:
-    print("This is a test for setup.py")
-    # parser = argparse.ArgumentParser()
-
+    """Main entry point for hpc-workshop program."""
+    emit.init(EmitterMode.QUIET, "hpc-workshop", "Starting hpc-workshop.")
+    command_groups = [CommandGroup("Basic", [InitCommand])]
+    try:
+        dispatcher = Dispatcher(
+            "hpc-workshop",
+            command_groups,
+            summary="A helper program for the HPC workshop at the 2022 Ubuntu Summit - Prague",
+        )
+        dispatcher.pre_parse_args(sys.argv[1:])
+        dispatcher.load_command(None)
+        dispatcher.run()
+    except (ArgumentParsingError, ProvideHelpException) as e:
+        print(e, file=sys.stderr)
+        emit.ended_ok()
+    else:
+        emit.ended_ok()
