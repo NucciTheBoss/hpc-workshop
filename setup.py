@@ -18,10 +18,9 @@ setup(
         include=["hpcworkshop*"],
     ),
     package_dir={"": "src"},
-    entry_points={
-        "console_scripts": ["hpc-workshop=hpcworkshop.main:main"]
-    },
+    entry_points={"console_scripts": ["hpc-workshop=hpcworkshop.main:main"]},
     install_requires=[
+        "craft-cli",
         "pylxd",
     ],
     keywords=[

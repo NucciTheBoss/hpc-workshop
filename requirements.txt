@@ -1,1 +1,2 @@
+craft-cli==1.2.0
 pylxd==2.3.1
