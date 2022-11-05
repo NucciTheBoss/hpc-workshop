@@ -18,12 +18,29 @@ from craft_cli import (
 )
 
 from hpcworkshop.cmd.init import InitCommand
+from hpcworkshop.cmd.setup_ldap import SetupLDAPCommand
+from hpcworkshop.cmd.setup_module import SetupModuleCommand
+from hpcworkshop.cmd.setup_nfs import SetupNFSCommand
+from hpcworkshop.cmd.setup_slurm import SetupSLURMCommand
+from hpcworkshop.cmd.spack_install import SpackInstallCommand
 
 
 def main() -> None:
     """Main entry point for hpc-workshop program."""
     emit.init(EmitterMode.BRIEF, "hpc-workshop", "Starting hpc-workshop.")
-    command_groups = [CommandGroup("Basic", [InitCommand])]
+    command_groups = [
+        CommandGroup(
+            "Helpers",
+            [
+                InitCommand,
+                SetupLDAPCommand,
+                SetupModuleCommand,
+                SetupNFSCommand,
+                SetupSLURMCommand,
+                SpackInstallCommand,
+            ],
+        )
+    ]
     try:
         dispatcher = Dispatcher(
             "hpc-workshop",
