@@ -22,7 +22,7 @@ from hpcworkshop.cmd.init import InitCommand
 
 def main() -> None:
     """Main entry point for hpc-workshop program."""
-    emit.init(EmitterMode.QUIET, "hpc-workshop", "Starting hpc-workshop.")
+    emit.init(EmitterMode.BRIEF, "hpc-workshop", "Starting hpc-workshop.")
     command_groups = [CommandGroup("Basic", [InitCommand])]
     try:
         dispatcher = Dispatcher(
