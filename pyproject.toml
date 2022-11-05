@@ -36,5 +36,5 @@ per-file-ignores = ["tests/*:D100,D101,D102,D103,D104"]
 docstring-convention = "google"
 # Check for properly formatted copyright header in each file
 copyright-check = "True"
-copyright-author = "Jason C. Nucciarone."
+copyright-author = "Jason C. Nucciarone"
 copyright-regexp = "Copyright\\s\\d{4}([-,]\\d{4})*\\s+%(author)s"
