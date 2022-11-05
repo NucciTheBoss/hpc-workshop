@@ -63,3 +63,6 @@ venv.bak/
 
 # mkdocs documentation
 /site
+
+# PyCharm community
+.idea/
