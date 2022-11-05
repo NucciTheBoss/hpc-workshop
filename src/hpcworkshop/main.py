@@ -18,11 +18,6 @@ from craft_cli import (
 )
 
 from hpcworkshop.cmd.init import InitCommand
-from hpcworkshop.cmd.setup_ldap import SetupLDAPCommand
-from hpcworkshop.cmd.setup_module import SetupModuleCommand
-from hpcworkshop.cmd.setup_nfs import SetupNFSCommand
-from hpcworkshop.cmd.setup_slurm import SetupSLURMCommand
-from hpcworkshop.cmd.spack_install import SpackInstallCommand
 
 
 def main() -> None:
@@ -33,11 +28,6 @@ def main() -> None:
             "Helpers",
             [
                 InitCommand,
-                SetupLDAPCommand,
-                SetupModuleCommand,
-                SetupNFSCommand,
-                SetupSLURMCommand,
-                SpackInstallCommand,
             ],
         )
     ]
