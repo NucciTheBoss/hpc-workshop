@@ -69,6 +69,7 @@ class _InitHandler:
                 "-y",
                 "wget",
                 "build-essential",
+                "nano",
                 "lua5.3",
                 "lua-bit32:amd64",
                 "lua-posix:amd64",
@@ -150,10 +151,15 @@ class _InitHandler:
         instance.execute(["make", "install"], cwd="/root/apptainer/builddir")
 
         emit.progress("Setting up LXD profiles...", permanent=True)
-        self.client.profiles.create("micro-hpc", config={"security.privileged": "true"})
+        self.client.profiles.create(
+            "micro-hpc", config={"limits.cpu": "1", "limits.memory": "2GB"}
+        )
         self.client.profiles.create(
             "nfs",
-            config={"raw.apparmor": "mount fstype=nfs*, mount fstype=rpc_pipefs,"},
+            config={
+                "raw.apparmor": "mount fstype=nfs*, mount fstype=rpc_pipefs,",
+                "security.privileged": "true",
+            },
         )
 
         emit.progress("Creating nodes for the HPC cluster...", permanent=True)
@@ -207,6 +213,7 @@ class _InitHandler:
             )
             node.execute(["mkdir", "-p", "/data"])
             node.execute(["mkdir", "-p", "/opt/sw/modules"])
+            node.restart()
 
         def slurm_rules(node: Any) -> None:
             subprocess.run(
@@ -224,6 +231,7 @@ class _InitHandler:
             node.execute(["rm", "-rf", "/opt/sw"])
             node.execute(["rm", "-rf", "/opt/apps"])
             node.execute(["mkdir", "-p", "/data"])
+            node.restart()
 
         dispatch = {
             "ldap": ldap_rules,
