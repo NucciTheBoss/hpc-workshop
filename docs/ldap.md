@@ -39,7 +39,7 @@ Move old database? [yes/no] yes
 
 ## Creating user `test` and group `research` on the server
 
-In a seperate terminal window on your system, open a text editor window. I used `nano` in my case:
+Still inside `ldap-0` open a text editor window. I used `nano` in my case:
 
 ```text
 $ nano add_test_user.ldif
@@ -85,13 +85,7 @@ memberUid: test
 
 > __Important:__ Make sure the content in your LDIF file is exactly the same as the code block above.
 
-With your LDIF file created, upload it into your `ldap-0` node using the following command:
-
-```text
-$ lxc file push add_test_user.ldif ldap-0/root/add_ldif_default.ldif
-```
-
-Go back into your terminal window with the activate shell session on `ldap-0`, and use the following command to add user `test` and group `research` to the OpenLDAP server:
+Now use the following command to add user `test` and group `research` to the OpenLDAP server:
 
 ```text
 ~# ldapadd -x -D "cn=admin,dc=micro-hpc,dc=org" -w test -f /root/add_test_user.ldif -H ldap:///
@@ -99,7 +93,7 @@ Go back into your terminal window with the activate shell session on `ldap-0`, a
 
 ## Letting everyone else know about user `test`
 
-Now we need to set up all the other nodes so that they know about user `test`. To accomplish this, we will use the *System Security Services Daemon*, also known as SSSD. First, we need to grab the IPv4 address of the `ldap-0` node. Execute the following command on your system:
+Now we need to set up all the other nodes so that they know about user `test`. To accomplish this, we will use the *System Security Services Daemon*, also known as SSSD. First, we need to grab the IPv4 address of the `ldap-0` node. Execute the following command on your system. Note that you will need to run this command in a terminal window outside `ldap-0`:
 
 ```text
 $ lxc list -c n4 -f compact | grep ldap
