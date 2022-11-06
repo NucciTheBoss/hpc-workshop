@@ -10,7 +10,7 @@ import subprocess
 import sys
 import textwrap
 import warnings
-from typing import Optional
+from typing import Any, Optional
 
 from craft_cli import BaseCommand, CraftError, emit
 from pylxd import Client
@@ -90,7 +90,7 @@ class _InitHandler:
                 "/root",
             ]
         )
-        instance.execute(["tar", "-xzf", "/root/8.7.13.tar.gz", "-C", "/root"])
+        instance.execute(["tar", "-xzf", "8.7.13.tar.gz"], cwd="/root")
         instance.execute(["./configure", "--prefix=/opt/apps"], cwd="/root/Lmod-8.7.13")
         instance.execute(["make", "-C", "/root/Lmod-8.7.13", "install"])
         instance.execute(
@@ -167,7 +167,11 @@ class _InitHandler:
                 )
                 instance = self.client.instances.get(node)
                 instance.start(wait=True)
-                self._apply_profiles(node)
+                instance.execute(["rm", "-rf", "/root/8.7.13.tar.gz"])
+                instance.execute(["rm", "-rf", "/root/Lmod-8.7.13"])
+                instance.execute(["rm", "-rf", "/root/go1.19.2.linux-amd64.tar.gz"])
+                instance.execute(["rm", "-rf", "/root/apptainer"])
+                self._apply_rules(instance)
             except subprocess.CalledProcessError as e:
                 emit.error(f"Failed to create node {node}. Reason {e}")
 
@@ -175,31 +179,59 @@ class _InitHandler:
         instance.stop(wait=True)
         instance.delete(wait=True)
 
-    def _apply_profiles(self, node: str) -> None:
-        def add_micro_hpc(node_name: str) -> None:
-            subprocess.run(
-                ["lxc", "profile", "add", node_name, "micro-hpc"],
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL,
-                check=True,
-            )
+    def _apply_rules(self, node: Any) -> None:
+        """Rules to apply to specific nodes"""
 
-        def add_micro_hpc_and_nfs(node_name: str) -> None:
-            add_micro_hpc(node_name)
+        def ldap_rules(node: Any) -> None:
             subprocess.run(
-                ["lxc", "profile", "add", node_name, "nfs"],
+                ["lxc", "profile", "add", node.name, "micro-hpc"],
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL,
                 check=True,
             )
+            node.execute(["rm", "-rf", "/opt/sw"])
+            node.execute(["rm", "-rf", "/opt/apps"])
+
+        def nfs_rules(node: Any) -> None:
+            subprocess.run(
+                ["lxc", "profile", "add", node.name, "micro-hpc"],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                check=True,
+            )
+            subprocess.run(
+                ["lxc", "profile", "add", node.name, "nfs"],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                check=True,
+            )
+            node.execute(["mkdir", "-p", "/data"])
+            node.execute(["mkdir", "-p", "/opt/sw/modules"])
+
+        def slurm_rules(node: Any) -> None:
+            subprocess.run(
+                ["lxc", "profile", "add", node.name, "micro-hpc"],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                check=True,
+            )
+            subprocess.run(
+                ["lxc", "profile", "add", node.name, "nfs"],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                check=True,
+            )
+            node.execute(["rm", "-rf", "/opt/sw"])
+            node.execute(["rm", "-rf", "/opt/apps"])
+            node.execute(["mkdir", "-p", "/data"])
 
         dispatch = {
-            "ldap": add_micro_hpc,
-            "nfs": add_micro_hpc_and_nfs,
-            "head": add_micro_hpc_and_nfs,
-            "compute": add_micro_hpc_and_nfs,
+            "ldap": ldap_rules,
+            "nfs": nfs_rules,
+            "head": slurm_rules,
+            "compute": slurm_rules,
         }
-        dispatch[node.split("-")[0]](node)
+        dispatch[node.name.split("-")[0]](node)
 
 
 class InitCommand(BaseCommand):
