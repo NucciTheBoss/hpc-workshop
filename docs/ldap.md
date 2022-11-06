@@ -139,7 +139,7 @@ We are almost there! One thing to note with SSSD is that it requires the *sssd.c
 
 ```text
 $ nodes=( nfs-0 head-0 compute-0 )
-$ for i in ${n[@]}; do
+$ for i in ${nodes[@]}; do
     lxc file push sssd-default.conf $i/etc/sssd/sssd.conf
     lxc exec $i -- chmod 0600 /etc/sssd/sssd.conf
     lxc exec $i -- pam-auth-update --enable mkhomedir
