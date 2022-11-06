@@ -55,6 +55,12 @@
               <ul class="current">
                 <li class="toctree-l1 current"><a class="reference internal current" href="./">Everybody gets some data</a>
     <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#setting-up-user-tests-directories-and-keys">Setting up user test's directories and keys</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#configuring-what-is-shared-by-nfs-0">Configuring what is shared by nfs-0</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#mounting-the-shared-directories">Mounting the shared directories</a>
+    </li>
     </ul>
                 </li>
               </ul>
@@ -101,7 +107,69 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
             <div class="section" itemprop="articleBody">
               
-                <h1 id="todo">TODO</h1>
+                <h1 id="sharing-is-caring">Sharing is caring</h1>
+<p>Right now, all of the nodes in our micro-HPC cluster are relatively operating independantly operating of one another; a file created on one node is not shared amongst the other nodes. This makes it albeit impossible to have many of thousands of nodes operating on the same data set. Luckily, we have <em><a href="https://en.wikipedia.org/wiki/Network_File_System">Network File System</a></em>, also know as NFS, to help us sync our data across the cluster.</p>
+<h2 id="setting-up-user-tests-directories-and-keys">Setting up user <code>test</code>'s directories and keys</h2>
+<p>First, we need to set up user <code>test</code>'s directories and keys so they can use our micro-HPC cluster. Start a shell session on the <code>nfs-0</code> node:</p>
+<pre><code class="language-text">$ lxc shell nfs-0
+</code></pre>
+<p>Now, inside <code>nfs-0</code>, create a directory for <code>test</code> under <code>/data</code>. This is where <code>test</code> will store all their files and code needed for their research. They will also need a home directory once they finally log onto the system:</p>
+<pre><code class="language-text">~# mkdir -p /data/test
+~# mkdir -p /home/test
+~# chown -R test:test /data/test
+~# chown -R test:test /home/test
+~# chmod 0755 /data
+~# chmod -R 0750 /data/test
+~# chmod -R 0740 /home/test
+~# ln -s /data/test /home/test/data
+</code></pre>
+<p>However, even though we created the directories needed by user <code>test</code>, they still have no way for actually logging in. We can get around this by setting up an ssh key that will allow <code>test</code> to log into the cluster via ssh. You will need two terminal windows; one for the shell session on <code>nfs-0</code> and the other on your system.</p>
+<p>Inside <code>nfs-0</code>, login as user <code>test</code> using the following command:</p>
+<pre><code class="language-text">sudo -i -u test
+</code></pre>
+<p>As user <code>test</code> on <code>nfs-0</code>, execute the following commands to set up an <em>authorized_keys</em> file:</p>
+<pre><code class="language-text">$ mkdir .ssh
+$ touch .ssh/authorized_keys
+</code></pre>
+<p>Now in the session on your system, create a private/public ssh keypair:</p>
+<pre><code class="language-text">$ ssh-keygen -t rsa -b 4096 -f test_rsa -N '' -q
+$ cat test_rsa.pub
+</code></pre>
+<p>Copy the output of <code>cat test_rsa.pub</code> and then execute the following command inside <code>nfs-0</code>:</p>
+<pre><code class="language-text">echo '&lt;copied_public_key&gt;' &gt;&gt; .ssh/authorized_keys
+</code></pre>
+<blockquote>
+<p><strong>Note:</strong> Be sure to replace <code>&lt;copied_public_key&gt;</code> with the public key that you copied from your system. Make sure you keep the key wrapped by the single quotes!</p>
+</blockquote>
+<h2 id="configuring-what-is-shared-by-nfs-0">Configuring what is shared by <code>nfs-0</code></h2>
+<p>With user <code>test</code> all set up on <code>nfs-0</code>, now it is time to configure how NFS exports directories on your system. Open a text editor window using the following command <code>nfs-0</code>, but make sure that you are logged in as user <code>root</code> rather than <code>test</code>:</p>
+<pre><code class="language-text">~# nano /etc/exports
+</code></pre>
+<p>Populate <code>/etc/exports</code> with the content below:</p>
+<pre><code class="language-text">/srv     *(ro,sync,subtree_check)
+/home    *(rw,sync,no_subtree_check)
+/data    *(rw,sync,no_subtree_check,no_root_squash)
+/opt     *(rw,sync,no_subtree_check,no_root_squash)
+</code></pre>
+<p>Save and close the file and then start the NFS server:</p>
+<pre><code class="language-text">~# systemctl enable nfs-kernel-server
+~# systemctl start nfs-kernel-server
+~# exportfs -a
+</code></pre>
+<h2 id="mounting-the-shared-directories">Mounting the shared directories</h2>
+<p>With your NFS server all set to go, now it is time to mount the shared directories inside the instances that need to consume those directories. In our case, these nodes will be <code>compute-0</code> and <code>head-0</code>. To get started, grab the IPv4 address of <code>nfs-0</code> using the following command:</p>
+<pre><code class="language-text">$ lxc list -c n4 -f compact | grep nfs
+</code></pre>
+<p>Now to save ourselves some grief, let us use a bash for loop to mount the shared drives in both <code>head-0</code> and <code>compute-0</code>:</p>
+<pre><code class="language-text">$ nodes=( compute-0 head-0 )
+$ NFS_SERVER_IP=10.5.1.120
+$ for i in ${nodes[@]}; do
+    lxc exec $i -- mount $NFS_SERVER_IP:/home /home
+    lxc exec $i -- mount $NFS_SERVER_IP:/data /data
+    lxc exec $i -- mount $NFS_SERVER_IP:/opt /opt
+  done
+</code></pre>
+<p>Now onto setting up our resource management software.</p>
               
             </div>
           </div><footer>

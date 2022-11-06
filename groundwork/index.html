@@ -47,6 +47,12 @@
               <ul class="current">
                 <li class="toctree-l1 current"><a class="reference internal current" href="./">Groundwork</a>
     <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#setting-up-lxd-on-your-system">Setting up LXD on your system</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#getting-the-hpc-workshop-pip-package">Getting the hpc-workshop pip package</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#bootstrapping-your-cluster">Bootstrapping your cluster</a>
+    </li>
     </ul>
                 </li>
               </ul>
@@ -101,7 +107,44 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
             <div class="section" itemprop="articleBody">
               
-                <h1 id="todo">TODO</h1>
+                <h1 id="so-what-will-we-be-doing">So what will we be doing?</h1>
+<p>We are going to be building an HPC cluster with LXD! Well... not really. We will be building a psuedo-HPC cluster, or as I like to call it, a <em>micro-HPC cluster</em>. I got the idea for the name from another popular project: <a href="https://microstack.run">Microstack</a>. True HPC clusters can fill an entire building; ours will just be a few LXD containers on your laptop.</p>
+<h2 id="setting-up-lxd-on-your-system">Setting up LXD on your system</h2>
+<p>LXD will serve as the undercloud for our HPC cluster. If you do not already have LXD installed on your system, use the following command to install the LXD snap package:</p>
+<pre><code class="language-text">$ sudo snap install lxd
+</code></pre>
+<p>With the snap installed, set up LXD on your system with the following configuration options:</p>
+<pre><code class="language-text">$ lxd init
+
+Would you like to use LXD clustering? (yes/no) [default=no]: 
+Do you want to configure a new storage pool? (yes/no) [default=yes]: 
+Name of the new storage pool [default=default]: micro-hpc 
+Name of the storage backend to use (lvm, zfs, ceph, btrfs, dir) [default=zfs]: 
+Create a new ZFS pool? (yes/no) [default=yes]: 
+Would you like to use an existing empty block device (e.g. a disk or partition)? (yes/no) [default=no]: 
+Size in GB of the new loop device (1GB minimum) [default=27GB]: 60GB
+Would you like to connect to a MAAS server? (yes/no) [default=no]: 
+Would you like to create a new local network bridge? (yes/no) [default=yes]: 
+What should the new bridge be called? [default=lxdbr0]: 
+What IPv4 address should be used? (CIDR subnet notation, “auto” or “none”) [default=auto]: 
+What IPv6 address should be used? (CIDR subnet notation, “auto” or “none”) [default=auto]: 
+Would you like the LXD server to be available over the network? (yes/no) [default=no]: 
+Would you like stale cached images to be updated automatically? (yes/no) [default=yes]: 
+Would you like a YAML &quot;lxd init&quot; preseed to be printed? (yes/no) [default=no]:
+</code></pre>
+<h2 id="getting-the-hpc-workshop-pip-package">Getting the <code>hpc-workshop</code> pip package</h2>
+<p>To make things go a "faster", I have written a small program to handle setting up what you will need for the micro-HPC cluster to work. It can be installed as pip package from PyPI:</p>
+<pre><code class="language-text">$ pip install hpc-workshop
+</code></pre>
+<p>After installing the package, you should be able to access the <code>hpc-workshop</code> command.</p>
+<blockquote>
+<p><strong>Note:</strong> You may have to run the command <code>export PATH=$HOME/.local/bin:$PATH</code> to access the <code>hpc-workshop</code> executable.</p>
+</blockquote>
+<h2 id="bootstrapping-your-cluster">Bootstrapping your cluster</h2>
+<p>With <code>hpc-workshop</code> installed, all you to do is execute the following command:</p>
+<pre><code class="language-text">$ hpc-workshop init
+</code></pre>
+<p>Yes, really, it is that simple! Now onto creating our cluster's user.</p>
               
             </div>
           </div><footer>

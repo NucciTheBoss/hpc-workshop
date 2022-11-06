@@ -59,6 +59,10 @@
               <ul class="current">
                 <li class="toctree-l1 current"><a class="reference internal current" href="./">Bureaucracy and nodes</a>
     <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#setting-up-authentication-with-munge">Setting up authentication with MUNGE</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#getting-groovy-with-node-configuration">Getting groovy with node configuration</a>
+    </li>
     </ul>
                 </li>
               </ul>
@@ -101,7 +105,81 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
             <div class="section" itemprop="articleBody">
               
-                <h1 id="todo">TODO</h1>
+                <h1 id="workload-manager-who-needs-it">Workload Manager? Who needs it?</h1>
+<p>You do! Imagine if a thousand people requested all request resources at the same time. Without any way to delegate responsibility across all the nodes in cluster, it would be a complete dumpster fire. Nodes with 1 TB of RAM would be going to tasks that maybe only need a few megabytes. Folks would get upset very fast; no one wants to own the cluster with so much promise but wasted potential. To avoid this problem, we will be using <a href="https://slurm.schedmd.com/overview.html">SLURM</a>, also know as <em>Simple Linux Utility for Resource Management</em>.</p>
+<h2 id="setting-up-authentication-with-munge">Setting up authentication with MUNGE</h2>
+<p>Before we can use SLURM on our cluster, we need to set up <a href="https://dun.github.io/munge/">MUNGE</a>, SLURM's companion authentication program. They MUNGE key file <code>munge.key</code> needs to be <strong>exactly</strong> the same across all nodes being managed by SLURM. To synchronize the keys, first download <code>munge.key</code> from <code>head-0</code>:</p>
+<pre><code class="language-text">$ lxc file pull head-0/etc/munge/munge.key
+</code></pre>
+<p>With the <code>munge.key</code> file downloaded from <code>head-0</code>, use the following commands to set up the key file on <code>compute-0</code>:</p>
+<pre><code class="language-text">$ lxc file push munge.key compute-0/etc/munge/munge.key
+$ lxc exec compute-0 -- chown munge:munge /etc/munge/munge.key
+$ lxc exec compute-0 -- chmod 0600 /etc/munge/munge.key
+</code></pre>
+<p>Now start the MUNGE authentication services on both <code>compute-0</code> and <code>head-0</code>:</p>
+<pre><code class="language-text">$ lxc exec compute-0 -- systemctl enable munge
+$ lxc exec compute-0 -- systemctl start munge
+$ lxc exec head-0 -- systemctl enable munge
+$ lxc exec head-0 -- systemctl start munge
+</code></pre>
+<h2 id="getting-groovy-with-node-configuration">Getting groovy with node configuration</h2>
+<p>Now that we have MUNGE set up, grab the IPv4 address of both <code>compute-0</code> and <code>head-0</code> using the following command:</p>
+<pre><code class="language-text">$ lxc list -c n4 -f compact | grep -E &quot;compute|head&quot;
+</code></pre>
+<p>The output will look something similar to the output below:</p>
+<pre><code class="language-text">  compute-0         10.5.1.149 (eth0)  
+  head-0            10.5.1.66 (eth0)
+</code></pre>
+<p>Now on your system, open a text editor window in your terminal:</p>
+<pre><code class="language-text">$ nano slurm.conf
+</code></pre>
+<p>Populate the file <em>slurm.conf</em> with the following information:</p>
+<pre><code class="language-text">SlurmctldHost=head-0(10.5.1.66)
+ClusterName=micro-hpc
+
+AuthType=auth/munge
+FirstJobId=65536
+InactiveLimit=120
+JobCompType=jobcomp/filetxt
+JobCompLoc=/var/log/slurm/jobcomp
+ProctrackType=proctrack/linuxproc
+KillWait=30
+MaxJobCount=10000
+MinJobAge=3600
+ReturnToService=0
+SchedulerType=sched/backfill
+SlurmctldLogFile=/var/log/slurm/slurmctld.log
+SlurmdLogFile=/var/log/slurm/slurmd.log
+SlurmctldPort=7002
+SlurmdPort=7003
+SlurmdSpoolDir=/var/spool/slurmd.spool
+StateSaveLocation=/var/spool/slurm.state
+SwitchType=switch/none
+TmpFS=/tmp
+WaitTime=30
+
+# Node Configurations
+#
+NodeName=compute-0 NodeAddr=10.5.1.149 CPUs=1 RealMemory=2000 TmpDisk=10000
+
+# Partition Configurations
+#
+PartitionName=all Nodes=compute-0 MaxTime=30 MaxNodes=3 State=UP
+</code></pre>
+<blockquote>
+<p><strong>Note:</strong> Ensure that you replace the IPv4 addresses I have above for both <code>compute-0</code> and <code>head-0</code> with the IPv4 addresses of the <code>compute-0</code> and <code>head-0</code> nodes on your system.</p>
+</blockquote>
+<p>Save and close the file and then use the following commands to upload the <em>slurm.conf</em> file to both <code>compute-0</code> and <code>head-0</code>:</p>
+<pre><code class="language-text">$ lxc file push slurm.conf compute-0/etc/slurm/slurm.conf
+$ lxc file push slurm.conf head-0/etc/slurm/slurm.conf
+</code></pre>
+<p>Now use the following commands to start the <em>slurmd</em> service on <code>compute-0</code> and the <em>slurmctld</em> service on <code>head-0</code>:</p>
+<pre><code class="language-text">$ lxc exec compute-0 -- systemctl enable slurmd
+$ lxc exec compute-0 -- systemctl start slurmd
+$ lxc exec head-0 -- systemctl enable slurmctld
+$ lxc exec head-0 -- systemctl start slurmctld
+</code></pre>
+<p>Now onto making our software stack!</p>
               
             </div>
           </div><footer>
