@@ -17,6 +17,7 @@ from craft_cli import (
     emit,
 )
 
+from hpcworkshop.cmd.destroy import DestroyCommand
 from hpcworkshop.cmd.init import InitCommand
 
 
@@ -28,6 +29,7 @@ def main() -> None:
             "Helpers",
             [
                 InitCommand,
+                DestroyCommand,
             ],
         )
     ]
