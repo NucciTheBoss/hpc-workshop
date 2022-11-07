@@ -8,5 +8,6 @@ nav:
   - 'Where is the software?': 'lmod.md'
   - 'Getting fancy with containers': 'containers.md'
   - 'Better software management with Spack': 'spack.md'
+  - 'Bringing it all together': 'together.md'
   - 'Where to go from here?': 'future.md'
 theme: readthedocs
