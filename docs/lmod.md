@@ -71,4 +71,5 @@ To test that apptainer works, use the following command to print the version num
 $ apptainer version
 ```
 
-If you see the version number printed out to the terminal, then you are good to move on to building an apptainer image!
+If you see the version number printed out to the terminal, then it is time to move on to building a container image
+with apptainer!
