@@ -7,7 +7,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="hpc-workshop",
-    version="1.0.1",
+    version="1.1.0",
     description="A helper program for the HPC workshop at the 2022 Ubuntu Summit - Prague",
     author="Jason C. Nucciarone",
     author_email="nucci.programming@gmail.com",
