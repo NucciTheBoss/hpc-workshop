@@ -1,10 +1,14 @@
 # Who is going to use our cluster?
 
-Obviously, we cannot let `root` be the sole user of our cluster - that would create a disaster. Therefore, to create a user, and have that user exists across all nodes within our micro-HPC cluster. To accomplish this, we will use [OpenLDAP](https://www.openldap.org), an open-source implementation of the *Lightweight Directory Access Protocol* (LDAP).
+Obviously, we cannot let `root` be the sole user of our cluster - that would create a disaster. 
+Therefore, to create a user, and have that user exists across all nodes within our micro-HPC cluster. 
+To accomplish this, we will use [OpenLDAP](https://www.openldap.org), an open-source implementation of the 
+*Lightweight Directory Access Protocol* (LDAP).
 
 ## Enabling the LDAP server on `ldap-0`
 
-Before we can add our user to the cluster, we need to start the OpenLDAP server. Let us start a shell session inside the `ldap-0` node:
+Before we can add our user to the cluster, we need to start the OpenLDAP server. Let us start a shell session inside the
+`ldap-0` node:
 
 ```text
 $ lxc shell ldap-0
@@ -17,13 +21,15 @@ Now inside the `ldap-0` node, execute the following commands to start the OpenLD
 ~# systemctl start slapd
 ```
 
-We are not done yet, however, for we need to also configure the OpenLDAP server. Luckily, `dpkg-reconfigure` can handle most of the legwork for us:
+We are not done yet, however, for we need to also configure the OpenLDAP server. Luckily, `dpkg-reconfigure` can handle 
+most of the legwork for us:
 
 ```text
 ~# dpkg-reconfigure -f readline slapd
 ```
 
-You will be taken through an interactive dialog to set up your server. Answer the prompts with the same answers as below:
+You will be taken through an interactive dialog to set up your server. Answer the prompts with the same answers as 
+below:
 
 ```test
 Omit OpenLDAP server configuration? [yes/no] no
@@ -35,7 +41,8 @@ Do you want your database to be removed when slapd is purged? [yes/no] yes
 Move old database? [yes/no] yes
 ```
 
-> __Note:__ For the password prompts, GNU readline will hide your inputs. Do not freak out when you do not see any characters appearing in the terminal when you are creating the adminstrator password.
+> __Note:__ For the password prompts, GNU readline will hide your inputs. Do not freak out when you do not see any 
+> characters appearing in the terminal when you are creating the administrator password.
 
 ## Creating user `test` and group `research` on the server
 
@@ -45,7 +52,8 @@ Still inside `ldap-0` open a text editor window. I used `nano` in my case:
 $ nano add_test_user.ldif
 ```
 
-With the editor open, populate the file with the following LDIF (*LDAP Data Interchange Format*) content, and then save and close the file:
+With the editor open, populate the file with the following LDIF (*LDAP Data Interchange Format*) content, and then save 
+and close the file:
 
 ```text
 dn: ou=People,dc=micro-hpc,dc=org
@@ -93,7 +101,10 @@ Now use the following command to add user `test` and group `research` to the Ope
 
 ## Letting everyone else know about user `test`
 
-Now we need to set up all the other nodes so that they know about user `test`. To accomplish this, we will use the *System Security Services Daemon*, also known as SSSD. First, we need to grab the IPv4 address of the `ldap-0` node. Execute the following command on your system. Note that you will need to run this command in a terminal window outside `ldap-0`:
+Now we need to set up all the other nodes so that they know about user `test`. To accomplish this, we will use the 
+*System Security Services Daemon*, also known as SSSD. First, we need to grab the IPv4 address of the `ldap-0` node. 
+Execute the following command on your system. Note that you will need to run this command in a terminal window outside 
+`ldap-0`:
 
 ```text
 $ lxc list -c n4 -f compact | grep ldap
@@ -126,10 +137,13 @@ cache_credentials = True
 ldap_search_base = dc=micro-hpc,dc=org
 ```
 
-> __Important:__ You should replace where I have my IPv4 address for `ldap-0` with the IPv4 adress of your `ldap-0` node.
+> __Important:__ You should replace where I have my IPv4 address for `ldap-0` with the IPv4 adress of your `ldap-0` 
+> node.
 
 
-We are almost there! One thing to note with SSSD is that it requires the *sssd.conf* file to have very specific access permissions. Also, these permissions need to be the same across all nodes connecting to the OpenLDAP server. Let us use some fancy bash scripting to make the set up a little easier on ourselves:
+We are almost there! One thing to note with SSSD is that it requires the *sssd.conf* file to have very specific access 
+permissions. Also, these permissions need to be the same across all nodes connecting to the OpenLDAP server. 
+Let us use some fancy bash scripting to make the set up a little easier on ourselves:
 
 ```text
 $ nodes=( nfs-0 head-0 compute-0 )
@@ -143,4 +157,5 @@ $ for i in ${nodes[@]}; do
   done
 ```
 
-This for loop will save us a lot of copy, pasting, and changing a couple characters. Now onto setting up our shared file system!
+This for loop will save us a lot of copy, pasting, and changing a couple characters. Now onto setting up our shared 
+file system!

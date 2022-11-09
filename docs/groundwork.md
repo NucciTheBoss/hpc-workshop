@@ -1,10 +1,14 @@
 # So what will we be doing?
 
-We are going to be building an HPC cluster with LXD! Well... not really. We will be building a psuedo-HPC cluster, or as I like to call it, a *micro-HPC cluster*. I got the idea for the name from another popular project: [Microstack](https://microstack.run). True HPC clusters can fill an entire building; ours will just be a few LXD containers on your laptop.
+We are going to be building an HPC cluster with LXD! Well... not really. We will be building a pseudo-HPC cluster, or as
+I like to call it, a *micro-HPC cluster*. I got the idea for the name from another popular project at Canonical: 
+[Microstack](https://microstack.run). True HPC clusters can fill an entire building; ours will just be a few LXD 
+containers on your laptop.
 
 ## Setting up LXD on your system
 
-LXD will serve as the undercloud for our HPC cluster. If you do not already have LXD installed on your system, use the following command to install the LXD snap package:
+LXD will serve as the under-cloud for our HPC cluster. If you do not already have LXD installed on your system, 
+use the following command to install the LXD snap package:
 
 ```text
 $ sudo snap install lxd
@@ -34,7 +38,8 @@ Would you like a YAML "lxd init" preseed to be printed? (yes/no) [default=no]:
 
 ## Getting the `hpc-workshop` pip package
 
-To make things go a "faster", I have written a small program to handle setting up what you will need for the micro-HPC cluster to work. It can be installed as pip package from PyPI:
+To make things go a "faster", I have written a small program to handle setting up what you will need for the micro-HPC 
+cluster to work. It can be installed as pip package from PyPI:
 
 ```text
 $ pip install hpc-workshop
@@ -42,7 +47,8 @@ $ pip install hpc-workshop
 
 After installing the package, you should be able to access the `hpc-workshop` command.
 
-> __Note:__ You may have to run the command `export PATH=$HOME/.local/bin:$PATH` to access the `hpc-workshop` executable.
+> __Note:__ You may have to run the command `export PATH=$HOME/.local/bin:$PATH` to access the `hpc-workshop` 
+> executable.
 
 ## Bootstrapping your cluster
 
