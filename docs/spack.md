@@ -19,7 +19,7 @@ $ lxc shell head-0
 Execute the following command as user `test` to install Spack inside their home directory:
 
 ```text
-git clone -c feature.manyFiles=true https://github.com/spack/spack.git
+$ git clone -c feature.manyFiles=true https://github.com/spack/spack.git
 ```
 
 > __Note:__ Spack is a rather beefy git repository, so the clone may take a few minutes
@@ -28,7 +28,7 @@ Once git has finished cloning the spack repository, execute the following comman
 environment:
 
 ```text
-. spack/share/spack/setup-env.sh
+$ . spack/share/spack/setup-env.sh
 ```
 
 ## Compiling a package
