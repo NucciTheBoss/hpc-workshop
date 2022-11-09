@@ -14,13 +14,14 @@ administrator to install a COBOL compiler on the cluster, let us provide them a 
 First, start a shell session on `head-0`:
 
 ```text
-$ lxc shell compute-0
+$ lxc shell head-0
 ```
 
-Now inside `compute-0`, open a text editor window. We will use this text editor window to create our "ancient" COBOL
+Now inside `head-0`, log in an user `test` and open a text editor window. We will use this text editor window to create our "ancient" COBOL
 code base:
 
 ```text
+~# sudo -i -u test
 ~# nano ancient_code.cbl
 ```
 
