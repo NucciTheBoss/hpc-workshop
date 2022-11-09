@@ -51,6 +51,7 @@ Save and close the file once you are done populating the file.
 To set up the module file up on `nfs-0`, use the following commands:
 
 ```text
+~# echo /opt/sw/modules > /opt/apps/lmod/lmod/init/.modulespath
 ~# mkdir -p /opt/sw/modules/apptainer
 ~# mv 1.1.3.lua /opt/sw/modules/apptainer
 ```
