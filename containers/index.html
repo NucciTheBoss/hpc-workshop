@@ -67,11 +67,19 @@
               <ul class="current">
                 <li class="toctree-l1 current"><a class="reference internal current" href="./">Getting fancy with containers</a>
     <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#building-a-simple-container">Building a simple container</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#using-the-container-to-run-our-program">Using the container to run our program</a>
+    </li>
     </ul>
                 </li>
               </ul>
               <ul>
                 <li class="toctree-l1"><a class="reference internal" href="../spack/">Better software management with Spack</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../together/">Bringing it all together</a>
                 </li>
               </ul>
               <ul>
@@ -101,7 +109,101 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
             <div class="section" itemprop="articleBody">
               
-                <h1 id="todo">TODO</h1>
+                <h1 id="containers-in-hpc">Containers in HPC</h1>
+<p>We can just use Docker, right? No. Docker is rarely used at all in HPC due to the security risks that it can impose 
+upon the cluster. Someone with the right knowledge can go into an unhardened Docker container and quickly wreak
+havoc on the host system. To avoid these potential disasters, clusters use <a href="https://apptainer.org">Apptainer</a> instead.
+It is a read-only container system that only allows read operations, and you are the same user inside the container
+as outside the container.</p>
+<h2 id="building-a-simple-container">Building a simple container</h2>
+<p>In our case, let us say that we have some ancient, mysterious COBOL code base that provides some critical calculations
+for your research. Rather than forcing everyone who tries to reproduce your results to beg their system
+administrator to install a COBOL compiler on the cluster, let us provide them a container they can pull instead.
+First, start a shell session on <code>head-0</code>:</p>
+<pre><code class="language-text">$ lxc shell head-0
+</code></pre>
+<p>Now inside <code>head-0</code>, log in an user <code>test</code> and open a text editor window. We will use this text editor window to create our "ancient" COBOL
+code base:</p>
+<pre><code class="language-text">~# sudo -i -u test
+~# nano ancient_code.cbl
+</code></pre>
+<p>Populate the <em>ancient_code.cbl</em> file with the content below:</p>
+<pre><code class="language-cobol">            IDENTIFICATION DIVISION.
+            PROGRAM-ID. VARS.
+
+            DATA DIVISION.
+              WORKING-STORAGE SECTION.
+              01 FIRST-VAR PIC S9(3)V9(2) VALUE 445.62.
+              01 SECOND-VAR PIC S9(3)V9(2) VALUE -123.45.
+              01 THIRD-VAR PIC A(6) VALUE 'XYZ'.
+              01 FOURTH-VAR PIC X(5) VALUE 'M565$'.
+              01 GROUP-VAR.
+                05 SUBVAR-2 PIC X(6) VALUE 'ATOMS'.
+                05 SUBVAR-3 PIC X(10) VALUE 'CHEMICALS'.
+                05 SUBVAR-4 PIC X(6) VALUE 'OH MY'.
+
+            PROCEDURE DIVISION.
+              DISPLAY &quot;1ST RESULT : &quot; FIRST-VAR.
+              DISPLAY &quot;2ND RESULT : &quot; SECOND-VAR.
+              DISPLAY &quot;3RD RESULT : &quot; THIRD-VAR.
+              DISPLAY &quot;4TH RESULT : &quot; FOURTH-VAR.
+              DISPLAY &quot;SUMMARY: &quot; GROUP-VAR.
+              STOP RUN.
+</code></pre>
+<blockquote>
+<p><strong>Important:</strong> Yes, this code file is formatted correctly. COBOL used to be written on punch cards where the first two
+"tabs" were dedicated to the line number. The styling convention was kept once COBOL migrated to being written
+on computers instead.</p>
+</blockquote>
+<p>Save and close after populating <em>ancient_code.cbl</em> with the "ancient" code. Now open a new text editor window:</p>
+<pre><code class="language-text">~# nano cobol-runtime.def
+</code></pre>
+<p><em>cobol-runtime.def</em> will serve as the definition file for our container. With the definition file open, populate it with
+the content below:</p>
+<pre><code class="language-text">Bootstrap: docker
+From: ubuntu:22.04
+
+%runscript
+  /opt/bin/simulation
+
+%files
+  ancient_code.cbl /opt/ancient_code.cbl
+
+%post
+  apt-get update -y
+  apt-get upgrade -y
+  apt-get install -y gnucobol
+
+  mkdir -p /opt/bin
+  cobc -x -o /opt/bin/simulation /opt/ancient_code.cbl
+  rm /opt/ancient_code.cbl
+
+%environment
+  export PATH=/opt/bin:$PATH
+
+%help
+  Encapsulate old COBOL in a flashy new container
+</code></pre>
+<p>Save and close the definition file after you have populated the file, and then build an image using the following
+command:</p>
+<pre><code class="language-text">~# apptainer build cobol-runtime.sif cobol-runtime.def
+</code></pre>
+<blockquote>
+<p><strong>Note:</strong> It will take a few minutes for the container to build.</p>
+</blockquote>
+<h2 id="using-the-container-to-run-our-program">Using the container to run our program</h2>
+<p>With the container image <em>cobol-realtime.sif</em> finally built, you can now run the simulation inside the apptainer
+image:</p>
+<pre><code class="language-text">~# apptainer -s run cobol-runtime.sif
+</code></pre>
+<p>If the container has built successfully, you should see the following output below:</p>
+<pre><code class="language-text">1ST RESULT : +445.62
+2ND RESULT : -123.45
+3RD RESULT : XYZ   
+4TH RESULT : M565$
+SUMMARY: ATOMS CHEMICALS OH MY
+</code></pre>
+<p>Now onto adding more software with Spack!</p>
               
             </div>
           </div><footer>

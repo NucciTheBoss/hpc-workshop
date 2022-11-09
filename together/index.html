@@ -5,15 +5,15 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
       <link rel="shortcut icon" href="../img/favicon.ico" />
-    <title>Where is the software? - HPC Workshop - Ubuntu Summit 2022</title>
+    <title>Bringing it all together - HPC Workshop - Ubuntu Summit 2022</title>
     <link rel="stylesheet" href="../css/theme.css" />
     <link rel="stylesheet" href="../css/theme_extra.css" />
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/styles/github.min.css" />
     
       <script>
         // Current page data
-        var mkdocs_page_name = "Where is the software?";
-        var mkdocs_page_input_path = "lmod.md";
+        var mkdocs_page_name = "Bringing it all together";
+        var mkdocs_page_input_path = "together.md";
         var mkdocs_page_url = null;
       </script>
     
@@ -60,16 +60,8 @@
                 <li class="toctree-l1"><a class="reference internal" href="../slurm/">Bureaucracy and nodes</a>
                 </li>
               </ul>
-              <ul class="current">
-                <li class="toctree-l1 current"><a class="reference internal current" href="./">Where is the software?</a>
-    <ul class="current">
-    <li class="toctree-l2"><a class="reference internal" href="#creating-a-lua-module-file">Creating a Lua module file</a>
-    </li>
-    <li class="toctree-l2"><a class="reference internal" href="#setting-up-the-module-file">Setting up the module file</a>
-    </li>
-    <li class="toctree-l2"><a class="reference internal" href="#accessing-apptainer">Accessing apptainer</a>
-    </li>
-    </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../lmod/">Where is the software?</a>
                 </li>
               </ul>
               <ul>
@@ -80,8 +72,16 @@
                 <li class="toctree-l1"><a class="reference internal" href="../spack/">Better software management with Spack</a>
                 </li>
               </ul>
-              <ul>
-                <li class="toctree-l1"><a class="reference internal" href="../together/">Bringing it all together</a>
+              <ul class="current">
+                <li class="toctree-l1 current"><a class="reference internal current" href="./">Bringing it all together</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#writing-a-job">Writing a job</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#submitting-a-job">Submitting a job</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#evaluating-the-results">Evaluating the results</a>
+    </li>
+    </ul>
                 </li>
               </ul>
               <ul>
@@ -102,7 +102,7 @@
         <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
     <li><a href=".." class="icon icon-home" alt="Docs"></a> &raquo;</li>
-      <li>Where is the software?</li>
+      <li>Bringing it all together</li>
     <li class="wy-breadcrumbs-aside">
     </li>
   </ul>
@@ -111,63 +111,84 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
             <div class="section" itemprop="articleBody">
               
-                <h1 id="put-a-pin-in-using-debs-or-snaps">Put a pin in using debs or snaps</h1>
-<p>On HPC clusters, there are typically thousands if not tens of thousands of daily users who all have their own custom
-software stacks. Reproducibility crucial in scientific research, even down to the point of having the same version of 
-the programming language. Updating the software stack on a whim quickly leads to a bunch of unhappy researchers.</p>
-<p>Luckily, we have some nice software to help us manage everyone's custom software deployment: 
-<a href="https://lmod.readthedocs.io/en/latest/">Lmod</a>! Lmod is a Lua-based module system that enables you to dynamically
-load software as defined in Lua module files.</p>
-<h2 id="creating-a-lua-module-file">Creating a Lua module file</h2>
-<p>If you look in the <code>/opt/sw</code> directory on <code>nfs-0</code>, you will see the directory <em>apptainer</em>:</p>
-<pre><code class="language-text">~# ls /opt/sw
+                <h1 id="time-to-enjoy-the-fruits-of-your-labor">Time to enjoy the fruits of your labor</h1>
+<p>We have gone through all this work to set up our cluster, so now it is time for us to enjoy the fruits of our labor.
+We are going to use all the software we have set up to submit our first job.</p>
+<h2 id="writing-a-job">Writing a job</h2>
+<p>Log into the <code>head-0</code> as user <code>test</code>:</p>
+<pre><code class="language-text">$ lxc shell head-0
+~# sudo -i -u nucci
 </code></pre>
-<p>This is the first program on our cluster that we will make available to our user <code>test</code>. To get started, open a text
-editor window using the following command:</p>
-<pre><code class="language-text">~# nano 1.1.3.lua
+<p>Logged in as user <code>test</code>, open a text editor window:</p>
+<pre><code class="language-text">$ nano research.submit
 </code></pre>
-<p>Inside the text editor window, populate the <em>1.1.3.lua</em> file with the content below:</p>
-<pre><code class="language-lua">help([[Apptainer is a container management software for HPC gurus like you and me]])
+<p>With the file <em>research.submit</em> open, populate the file with the content below:</p>
+<pre><code class="language-text">#!/bin/bash
+#SBATCH --job-name=research
+#SBATCH --partition=all
+#SBATCH --nodes=1
+#SBATCH --ntasks-per-node=1
+#SBATCH --cpus-per-task=1
+#SBATCH --mem=500mb
+#SBATCH --time=00:00:30
+#SBATCH --error=research.%J.err
+#SBATCH --output=research.%J.out
 
-local root = &quot;/opt/sw/apptainer&quot;
+. spack/share/spack/setup-env.sh
+spack load cowsay
+module load apptainer
 
-app_bin = pathJoin(root, &quot;bin&quot;)
-app_libexec_bin = pathJoin(root, &quot;libexec/apptainer/bin&quot;)
-app_libexec_cni = pathJoin(root, &quot;libexec/apptainer/cni&quot;)
-app_libexec_lib = pathJoin(root, &quot;libexec/apptainer/lib&quot;)
-app_man = pathJoin(root, &quot;share/man&quot;)
+apptainer -s run cobol-runtime.sif
+echo -e &quot;\n\n&quot;
+cowsay 'Done'
+</code></pre>
+<p>Save and close the file once you are done populating the <em>research.job</em> file.</p>
+<blockquote>
+<p><strong>Important:</strong> If you notice that your SLURM compute node has the state of drained, you will need to <em>undrain</em> it.
+You can undrain the node by launching the scontrol interpreter and issuing the following commands:
+<code>text
+~# scontrol
+update NodeName=compute-0 State=DOWN Reason="undraining"
+update NodeName=compute-0 State=RESUME</code></p>
+</blockquote>
+<h2 id="submitting-a-job">Submitting a job</h2>
+<p>You can use the following command to submit your job file to your micro-HPC cluster:</p>
+<pre><code class="language-text">$ sbatch research.submit
+</code></pre>
+<h2 id="evaluating-the-results">Evaluating the results</h2>
+<p>After a few seconds, your job's results should be returned by SLURM. You can use the following command to browse
+through the results of your job:</p>
+<pre><code class="language-text">$ less research.65539.out
+</code></pre>
+<blockquote>
+<p><strong>Note:</strong> Your job ID number may defer from the one above.</p>
+</blockquote>
+<p>You should see something like the following in your <code>less</code> window:</p>
+<pre><code class="language-text">1ST RESULT : +445.62
+2ND RESULT : -123.45
+3RD RESULT : XYZ   
+4TH RESULT : M565$
+SUMMARY: ATOMS CHEMICALS OH MY 
 
-prepend_path(&quot;PATH&quot;, app_bin)
-prepend_path(&quot;PATH&quot;, app_libexec_bin)
-prepend_path(&quot;PATH&quot;, app_libexec_cni)
-prepend_path(&quot;LIBRARY_PATH&quot;, app_libexec_lib)
-prepend_path(&quot;LD_LIBRARY_PATH&quot;, app_libexec_lib)
-prepend_path(&quot;MANPATH&quot;, app_man)
+
+
+ ______ 
+&lt; Done &gt;
+ ------ 
+        \   ^__^
+         \  (oo)\_______
+            (__)\       )\/\
+                ||----w |
+                ||     ||
 </code></pre>
-<p>Save and close the file once you are done populating the file.</p>
-<h2 id="setting-up-the-module-file">Setting up the module file</h2>
-<p>To set up the module file up on <code>nfs-0</code>, use the following commands:</p>
-<pre><code class="language-text">~# echo /opt/sw/modules &gt; /opt/apps/lmod/lmod/init/.modulespath
-~# mkdir -p /opt/sw/modules/apptainer
-~# mv 1.1.3.lua /opt/sw/modules/apptainer
-</code></pre>
-<h2 id="accessing-apptainer">Accessing <code>apptainer</code></h2>
-<p>With the module file set in place, let us test that it works. Log into <code>nfs-0</code> as user <code>test</code>, and then load the
-apptainer module:</p>
-<pre><code class="language-text">~# sudo -i -u test
-$ module load apptainer
-</code></pre>
-<p>To test that apptainer works, use the following command to print the version number:</p>
-<pre><code class="language-text">$ apptainer version
-</code></pre>
-<p>If you see the version number printed out to the terminal, then it is time to move on to building a container image
-with apptainer!</p>
+<p>Congratulations! You successfully ran your first job. This is the end of the workshop, so the next page will discuss
+where you can go from here!</p>
               
             </div>
           </div><footer>
     <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
-        <a href="../slurm/" class="btn btn-neutral float-left" title="Bureaucracy and nodes"><span class="icon icon-circle-arrow-left"></span> Previous</a>
-        <a href="../containers/" class="btn btn-neutral float-right" title="Getting fancy with containers">Next <span class="icon icon-circle-arrow-right"></span></a>
+        <a href="../spack/" class="btn btn-neutral float-left" title="Better software management with Spack"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../future/" class="btn btn-neutral float-right" title="Where to go from here?">Next <span class="icon icon-circle-arrow-right"></span></a>
     </div>
 
   <hr/>
@@ -190,10 +211,10 @@ with apptainer!</p>
   <span class="rst-current-version" data-toggle="rst-current-version">
     
     
-      <span><a href="../slurm/" style="color: #fcfcfc">&laquo; Previous</a></span>
+      <span><a href="../spack/" style="color: #fcfcfc">&laquo; Previous</a></span>
     
     
-      <span><a href="../containers/" style="color: #fcfcfc">Next &raquo;</a></span>
+      <span><a href="../future/" style="color: #fcfcfc">Next &raquo;</a></span>
     
   </span>
 </div>

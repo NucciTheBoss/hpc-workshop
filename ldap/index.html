@@ -81,6 +81,10 @@
                 </li>
               </ul>
               <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../together/">Bringing it all together</a>
+                </li>
+              </ul>
+              <ul>
                 <li class="toctree-l1"><a class="reference internal" href="../future/">Where to go from here?</a>
                 </li>
               </ul>
@@ -108,19 +112,25 @@
             <div class="section" itemprop="articleBody">
               
                 <h1 id="who-is-going-to-use-our-cluster">Who is going to use our cluster?</h1>
-<p>Obviously, we cannot let <code>root</code> be the sole user of our cluster - that would create a disaster. Therefore, to create a user, and have that user exists across all nodes within our micro-HPC cluster. To accomplish this, we will use <a href="https://www.openldap.org">OpenLDAP</a>, an open-source implementation of the <em>Lightweight Directory Access Protocol</em> (LDAP).</p>
+<p>Obviously, we cannot let <code>root</code> be the sole user of our cluster - that would create a disaster. 
+Therefore, to create a user, and have that user exists across all nodes within our micro-HPC cluster. 
+To accomplish this, we will use <a href="https://www.openldap.org">OpenLDAP</a>, an open-source implementation of the 
+<em>Lightweight Directory Access Protocol</em> (LDAP).</p>
 <h2 id="enabling-the-ldap-server-on-ldap-0">Enabling the LDAP server on <code>ldap-0</code></h2>
-<p>Before we can add our user to the cluster, we need to start the OpenLDAP server. Let us start a shell session inside the <code>ldap-0</code> node:</p>
+<p>Before we can add our user to the cluster, we need to start the OpenLDAP server. Let us start a shell session inside the
+<code>ldap-0</code> node:</p>
 <pre><code class="language-text">$ lxc shell ldap-0
 </code></pre>
 <p>Now inside the <code>ldap-0</code> node, execute the following commands to start the OpenLDAP server:</p>
 <pre><code class="language-text">~# systemctl enable slapd
 ~# systemctl start slapd
 </code></pre>
-<p>We are not done yet, however, for we need to also configure the OpenLDAP server. Luckily, <code>dpkg-reconfigure</code> can handle most of the legwork for us:</p>
+<p>We are not done yet, however, for we need to also configure the OpenLDAP server. Luckily, <code>dpkg-reconfigure</code> can handle 
+most of the legwork for us:</p>
 <pre><code class="language-text">~# dpkg-reconfigure -f readline slapd
 </code></pre>
-<p>You will be taken through an interactive dialog to set up your server. Answer the prompts with the same answers as below:</p>
+<p>You will be taken through an interactive dialog to set up your server. Answer the prompts with the same answers as 
+below:</p>
 <pre><code class="language-test">Omit OpenLDAP server configuration? [yes/no] no
 DNS domain name: micro-hpc.org
 Organization name: micro-hpc
@@ -130,13 +140,15 @@ Do you want your database to be removed when slapd is purged? [yes/no] yes
 Move old database? [yes/no] yes
 </code></pre>
 <blockquote>
-<p><strong>Note:</strong> For the password prompts, GNU readline will hide your inputs. Do not freak out when you do not see any characters appearing in the terminal when you are creating the adminstrator password.</p>
+<p><strong>Note:</strong> For the password prompts, GNU readline will hide your inputs. Do not freak out when you do not see any 
+characters appearing in the terminal when you are creating the administrator password.</p>
 </blockquote>
 <h2 id="creating-user-test-and-group-research-on-the-server">Creating user <code>test</code> and group <code>research</code> on the server</h2>
 <p>Still inside <code>ldap-0</code> open a text editor window. I used <code>nano</code> in my case:</p>
 <pre><code class="language-text">$ nano add_test_user.ldif
 </code></pre>
-<p>With the editor open, populate the file with the following LDIF (<em>LDAP Data Interchange Format</em>) content, and then save and close the file:</p>
+<p>With the editor open, populate the file with the following LDIF (<em>LDAP Data Interchange Format</em>) content, and then save 
+and close the file:</p>
 <pre><code class="language-text">dn: ou=People,dc=micro-hpc,dc=org
 objectClass: organizationalUnit
 ou: People
@@ -178,7 +190,10 @@ memberUid: test
 <pre><code class="language-text">~# ldapadd -x -D &quot;cn=admin,dc=micro-hpc,dc=org&quot; -w test -f /root/add_test_user.ldif -H ldap:///
 </code></pre>
 <h2 id="letting-everyone-else-know-about-user-test">Letting everyone else know about user <code>test</code></h2>
-<p>Now we need to set up all the other nodes so that they know about user <code>test</code>. To accomplish this, we will use the <em>System Security Services Daemon</em>, also known as SSSD. First, we need to grab the IPv4 address of the <code>ldap-0</code> node. Execute the following command on your system. Note that you will need to run this command in a terminal window outside <code>ldap-0</code>:</p>
+<p>Now we need to set up all the other nodes so that they know about user <code>test</code>. To accomplish this, we will use the 
+<em>System Security Services Daemon</em>, also known as SSSD. First, we need to grab the IPv4 address of the <code>ldap-0</code> node. 
+Execute the following command on your system. Note that you will need to run this command in a terminal window outside 
+<code>ldap-0</code>:</p>
 <pre><code class="language-text">$ lxc list -c n4 -f compact | grep ldap
 </code></pre>
 <p>The output from the above command should look similar to the following output:</p>
@@ -200,9 +215,12 @@ cache_credentials = True
 ldap_search_base = dc=micro-hpc,dc=org
 </code></pre>
 <blockquote>
-<p><strong>Important:</strong> You should replace where I have my IPv4 address for <code>ldap-0</code> with the IPv4 adress of your <code>ldap-0</code> node.</p>
+<p><strong>Important:</strong> You should replace where I have my IPv4 address for <code>ldap-0</code> with the IPv4 adress of your <code>ldap-0</code> 
+node.</p>
 </blockquote>
-<p>We are almost there! One thing to note with SSSD is that it requires the <em>sssd.conf</em> file to have very specific access permissions. Also, these permissions need to be the same across all nodes connecting to the OpenLDAP server. Let us use some fancy bash scripting to make the set up a little easier on ourselves:</p>
+<p>We are almost there! One thing to note with SSSD is that it requires the <em>sssd.conf</em> file to have very specific access 
+permissions. Also, these permissions need to be the same across all nodes connecting to the OpenLDAP server. 
+Let us use some fancy bash scripting to make the set up a little easier on ourselves:</p>
 <pre><code class="language-text">$ nodes=( nfs-0 head-0 compute-0 )
 $ for i in ${nodes[@]}; do
     lxc file push sssd.conf $i/etc/sssd/sssd.conf
@@ -213,7 +231,8 @@ $ for i in ${nodes[@]}; do
     lxc exec $i -- systemctl start sssd
   done
 </code></pre>
-<p>This for loop will save us a lot of copy, pasting, and changing a couple characters. Now onto setting up our shared file system!</p>
+<p>This for loop will save us a lot of copy, pasting, and changing a couple characters. Now onto setting up our shared 
+file system!</p>
               
             </div>
           </div><footer>

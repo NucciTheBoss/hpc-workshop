@@ -81,6 +81,10 @@
                 </li>
               </ul>
               <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../together/">Bringing it all together</a>
+                </li>
+              </ul>
+              <ul>
                 <li class="toctree-l1"><a class="reference internal" href="../future/">Where to go from here?</a>
                 </li>
               </ul>
@@ -108,9 +112,13 @@
             <div class="section" itemprop="articleBody">
               
                 <h1 id="so-what-will-we-be-doing">So what will we be doing?</h1>
-<p>We are going to be building an HPC cluster with LXD! Well... not really. We will be building a psuedo-HPC cluster, or as I like to call it, a <em>micro-HPC cluster</em>. I got the idea for the name from another popular project: <a href="https://microstack.run">Microstack</a>. True HPC clusters can fill an entire building; ours will just be a few LXD containers on your laptop.</p>
+<p>We are going to be building an HPC cluster with LXD! Well... not really. We will be building a pseudo-HPC cluster, or as
+I like to call it, a <em>micro-HPC cluster</em>. I got the idea for the name from another popular project at Canonical: 
+<a href="https://microstack.run">Microstack</a>. True HPC clusters can fill an entire building; ours will just be a few LXD 
+containers on your laptop.</p>
 <h2 id="setting-up-lxd-on-your-system">Setting up LXD on your system</h2>
-<p>LXD will serve as the undercloud for our HPC cluster. If you do not already have LXD installed on your system, use the following command to install the LXD snap package:</p>
+<p>LXD will serve as the under-cloud for our HPC cluster. If you do not already have LXD installed on your system, 
+use the following command to install the LXD snap package:</p>
 <pre><code class="language-text">$ sudo snap install lxd
 </code></pre>
 <p>With the snap installed, set up LXD on your system with the following configuration options:</p>
@@ -133,12 +141,14 @@ Would you like stale cached images to be updated automatically? (yes/no) [defaul
 Would you like a YAML &quot;lxd init&quot; preseed to be printed? (yes/no) [default=no]:
 </code></pre>
 <h2 id="getting-the-hpc-workshop-pip-package">Getting the <code>hpc-workshop</code> pip package</h2>
-<p>To make things go a "faster", I have written a small program to handle setting up what you will need for the micro-HPC cluster to work. It can be installed as pip package from PyPI:</p>
+<p>To make things go a "faster", I have written a small program to handle setting up what you will need for the micro-HPC 
+cluster to work. It can be installed as pip package from PyPI:</p>
 <pre><code class="language-text">$ pip install hpc-workshop
 </code></pre>
 <p>After installing the package, you should be able to access the <code>hpc-workshop</code> command.</p>
 <blockquote>
-<p><strong>Note:</strong> You may have to run the command <code>export PATH=$HOME/.local/bin:$PATH</code> to access the <code>hpc-workshop</code> executable.</p>
+<p><strong>Note:</strong> You may have to run the command <code>export PATH=$HOME/.local/bin:$PATH</code> to access the <code>hpc-workshop</code> 
+executable.</p>
 </blockquote>
 <h2 id="bootstrapping-your-cluster">Bootstrapping your cluster</h2>
 <p>With <code>hpc-workshop</code> installed, all you to do is execute the following command:</p>
