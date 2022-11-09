@@ -43,6 +43,14 @@ cowsay 'Done'
 
 Save and close the file once you are done populating the *research.job* file.
 
+> __Important:__ If you notice that your SLURM compute node has the state of drained, you will need to *undrain* it.
+> You can undrain the node by launching the scontrol interpreter and issuing the following commands:
+> ```text
+> ~# scontrol
+> update NodeName=compute-0 State=DOWN Reason="undraining"
+> update NodeName=compute-0 State=RESUME
+> ```
+
 ## Submitting a job
 
 You can use the following command to submit your job file to your micro-HPC cluster:
